@@ -1,8 +1,8 @@
 <script context="module">
-	import { getLeagueRosters, getLeagueUsers, getPreviousDrafts, waitForAll } from '$lib/utils/helper';
+	import { getStandings, getPreviousDrafts } from '$lib/utils/helper';
 
 	export async function load() {
-		const standingsInfo = waitForAll(getLeagueRosters(), getLeagueUsers());
+		const standingsInfo = getStandings();
 		const draftInfo = getPreviousDrafts();
 		return {
 			props: { standingsInfo, draftInfo }
@@ -22,24 +22,9 @@
 	let standingsError = null;
 
 	standingsInfo
-		.then(([rosterData, users]) => {
+		.then((rows) => {
 			standingsLoading = false;
-			standings = rosterData.rosters
-				.map((r) => {
-					const user = users[r.owner_id];
-					return {
-						name: user?.metadata?.team_name || user?.display_name || 'Unknown',
-						avatar: user?.avatar
-							? `https://sleepercdn.com/avatars/thumbs/${user.avatar}`
-							: 'https://sleepercdn.com/images/v2/icons/player_default.webp',
-						wins: r.settings.wins,
-						losses: r.settings.losses,
-						ties: r.settings.ties,
-						pf: +(r.settings.fpts + r.settings.fpts_decimal / 100).toFixed(2),
-						pa: +(r.settings.fpts_against + r.settings.fpts_against_decimal / 100).toFixed(2)
-					};
-				})
-				.sort((a, b) => b.wins - a.wins || b.pf - a.pf);
+			standings = rows;
 		})
 		.catch((err) => {
 			standingsLoading = false;
