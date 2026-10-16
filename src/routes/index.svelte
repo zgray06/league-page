@@ -2,13 +2,14 @@
 	import LinearProgress from '@smui/linear-progress';
 	import { getNflState, cleanName, leagueName } from '$lib/utils/helper';
 	import { Transactions, PowerRankings} from '$lib/components';
-    import { getAwards } from "$lib/utils/helper"
+    import { getAwards, getStandings } from "$lib/utils/helper"
     import { rosterManagers } from '$lib/utils/rosterManagers';
     import { goto } from '$app/navigation';
     import { managers } from './managers/managers';
 
     let nflState = getNflState();
     let podiumsData = getAwards();
+    let standings = getStandings();
 
     const getNames = (name, rosterID, currentManagers) => {
 		if(cleanName(name) != cleanName(currentManagers[rosterID].name)) {
@@ -144,6 +145,89 @@
         cursor: pointer;
     }
     
+    .status {
+        color: #777;
+        margin-top: -0.5em;
+    }
+
+    .muted {
+        color: #aaa;
+    }
+
+    .summary {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        padding: 16px 20px;
+        margin: 20px 0 40px;
+    }
+
+    .summaryTitle {
+        font-size: 0.78em;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #888;
+        margin: 0 0 8px;
+    }
+
+    .topRow {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .topRank {
+        width: 18px;
+        color: #aaa;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .topAvatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        flex-shrink: 0;
+    }
+
+    .topName {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .topRecord {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .topPf {
+        color: #777;
+        font-size: 0.85em;
+        font-variant-numeric: tabular-nums;
+        min-width: 70px;
+        text-align: right;
+    }
+
+    .dashLink {
+        display: inline-block;
+        margin-top: 12px;
+        font-weight: 600;
+        color: #5c6bc0;
+        text-decoration: none;
+    }
+
+    .dashLink:hover {
+        text-decoration: underline;
+    }
+
 	:global(.curOwner) {
 		font-size: 0.75em;
 		color: #bbb;
@@ -155,12 +239,34 @@
     <div id="main">
         <div class="text">
             <h6>{leagueName}</h6>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            {#await nflState then nflStateData}
+                <p class="center status">NFL {nflStateData.season} · {nflStateData.week > 0 ? `Week ${nflStateData.week}` : 'Preseason'}</p>
+            {:catch}
+            {/await}
+
+            <div class="summary">
+                <p class="summaryTitle">Top of the standings</p>
+                {#await standings}
+                    <LinearProgress indeterminate />
+                {:then rows}
+                    {#if rows.every(r => r.wins + r.losses + r.ties === 0)}
+                        <p class="center muted">Season hasn't started yet.</p>
+                    {:else}
+                        {#each rows.slice(0, 3) as row, i}
+                            <div class="topRow">
+                                <span class="topRank">{i + 1}</span>
+                                <img class="topAvatar" src={row.avatar} alt={row.name} />
+                                <span class="topName">{row.name}</span>
+                                <span class="topRecord">{row.wins}-{row.losses}{row.ties ? `-${row.ties}` : ''}</span>
+                                <span class="topPf">{row.pf} PF</span>
+                            </div>
+                        {/each}
+                    {/if}
+                {:catch error}
+                    <p class="center muted">Could not load standings: {error.message}</p>
+                {/await}
+                <a class="dashLink" href="/dashboard">Full standings &amp; draft lookup →</a>
+            </div>
         </div>
         <PowerRankings />
     </div>

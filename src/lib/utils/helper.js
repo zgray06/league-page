@@ -12,6 +12,7 @@ import { getLeagueRecords } from './helperFunctions/leagueRecords'
 import { getAwards } from './helperFunctions/leagueAwards'
 import { cleanName, round, generateGraph } from './helperFunctions/universalFunctions';
 import { predictScores } from './helperFunctions/predictOptimalScore';
+import { getStandings } from './helperFunctions/standings';
 
 export {
     getLeagueData,
@@ -34,5 +35,6 @@ export {
     dynasty,
     getAwards,
     generateGraph,
-    predictScores
+    predictScores,
+    getStandings
 }
